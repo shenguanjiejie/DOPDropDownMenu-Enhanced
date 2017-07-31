@@ -115,6 +115,11 @@ typedef NS_ENUM(NSInteger, DOPIndicatorAlignType) {
 // 当有二级列表item时，点击row 是否调用点击代理方法
 @property (nonatomic, assign) BOOL isClickHaveItemValid;
 
+/**
+ 当有二级列表item时,左边的row是否可以被当做item被选中并执行收起动画,默认为YES
+ */
+@property (nonatomic, assign) BOOL leftRowChooseEnable;
+
 @property (nonatomic, getter=isRemainMenuTitle) BOOL remainMenuTitle; // 切换条件时是否更改menu title
 @property (nonatomic, strong) NSMutableArray  *currentSelectRowArray; // 恢复默认选项用
 @property (nonatomic, strong) NSArray<NSString *> *indicatorImageNames;// 自定义指示器图片(在设置dataSource之前调用才会生效)

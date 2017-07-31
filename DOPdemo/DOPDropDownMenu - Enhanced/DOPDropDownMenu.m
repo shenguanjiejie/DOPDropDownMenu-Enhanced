@@ -366,6 +366,7 @@
         _tableViewHeight = IS_IPHONE_4_OR_LESS ? 200 : kTableViewHeight;
         _dropDownViewWidth = [UIScreen mainScreen].bounds.size.width;
         _isClickHaveItemValid = YES;
+        _leftRowChooseEnable = YES;
         _indicatorAlignType = DOPIndicatorAlignTypeRight;
         CGSize dropDownViewSize = CGSizeMake(_dropDownViewWidth, [UIScreen mainScreen].bounds.size.height);
         
@@ -888,13 +889,12 @@
     
     _currentSelectRowArray[_currentSelectedMenudIndex] = @(row);
     
-    
     CATextLayer *title = (CATextLayer *)_titles[_currentSelectedMenudIndex];
     
     if (_dataSourceFlags.numberOfItemsInRow && [_dataSource menu:self numberOfItemsInRow:row column:_currentSelectedMenudIndex]> 0) {
         
         // 有双列表 有item数据
-        if (self.isClickHaveItemValid) {
+        if (self.leftRowChooseEnable && self.isClickHaveItemValid) {
             title.string = [_dataSource menu:self titleForRowAtIndexPath:[DOPIndexPath indexPathWithCol:_currentSelectedMenudIndex row:row]];
             [self animateTitle:title show:YES complete:^{
                 [_rightTableView reloadData];
@@ -906,11 +906,35 @@
         
     } else {
         
-        title.string = [_dataSource menu:self titleForRowAtIndexPath:
-                        [DOPIndexPath indexPathWithCol:_currentSelectedMenudIndex row:self.isRemainMenuTitle ? 0 : row]];
-        [self animateIdicator:_indicators[_currentSelectedMenudIndex] background:_backGroundView tableView:_leftTableView title:_titles[_currentSelectedMenudIndex] forward:NO complecte:^{
-            self.show = NO;
-        }];
+        BOOL haveItemInCurrentColumn = NO;
+        
+        // 如果leftRowChooseEnable为NO,则判断当前列是否有二级菜单
+        if (!self.leftRowChooseEnable) {
+            NSInteger numberOfRowsInColumn = 0;
+            if ([self.dataSource respondsToSelector:@selector(menu:numberOfRowsInColumn:)]) {
+                numberOfRowsInColumn = [self.dataSource menu:self numberOfRowsInColumn:_currentSelectedMenudIndex];
+            }
+            
+            if ([self.dataSource respondsToSelector:@selector(menu:numberOfItemsInRow:column:)]) {
+                for (int i = 0; i < numberOfRowsInColumn; i++) {
+                    if ([self.dataSource menu:self numberOfItemsInRow:i column:_currentSelectedMenudIndex] > 0){
+                        haveItemInCurrentColumn = YES;
+                    }
+                }
+            }
+        }
+        
+        //如果leftRowChooseEnable为YES, 或者并不存在二级菜单,则选中当前row,执行动画
+        if (self.leftRowChooseEnable || !haveItemInCurrentColumn) {
+            title.string = [_dataSource menu:self titleForRowAtIndexPath:
+                            [DOPIndexPath indexPathWithCol:_currentSelectedMenudIndex row:self.isRemainMenuTitle ? 0 : row]];
+            [self animateIdicator:_indicators[_currentSelectedMenudIndex] background:_backGroundView tableView:_leftTableView title:_titles[_currentSelectedMenudIndex] forward:NO complecte:^{
+                self.show = NO;
+            }];
+        }else{
+            [_rightTableView reloadData];
+        }
+        
         return YES;
     }
 }
